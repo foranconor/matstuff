@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/sha512"
@@ -88,15 +89,12 @@ func (a *Auth) TokensRoute(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	fmt.Println(req)
-
 	id, access, refresh, role, external, err := a.Tokens(req.Email, req.Proof)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(id, access, refresh, role, external)
 	sendJSON(TokenResp{ID: id, Access: access, Refresh: refresh, Role: role, External: external}, w)
 }
 
@@ -218,13 +216,9 @@ func (a *Auth) Tokens(email string, hash []byte) (int, string, string, string, b
 	if err != nil {
 		return 0, "", "", "", true, err
 	}
-	fmt.Println(challenge)
-	fmt.Println(hash)
 
-	for i := 0; i < len(challenge); i++ {
-		if challenge[i] != hash[i] {
-			return 0, "", "", "", true, fmt.Errorf("failed to provide proof")
-		}
+	if !bytes.Equal(challenge, hash) {
+		return 0, "", "", "", true, fmt.Errorf("failed to provide proof")
 	}
 
 	accessToken, refreshToken, err := a.makeTokens(id, tx)
@@ -340,4 +334,3 @@ func (a *Auth) Check(accessToken string) (*User, bool, error) {
 
 	return &u, true, nil
 }
-

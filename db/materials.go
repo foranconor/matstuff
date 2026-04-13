@@ -95,7 +95,7 @@ func UpdateUses(tx *sql.Tx, u domain.Uses) error {
 func ListMaterialSuppliers(tx *sql.Tx, materialID int) ([]domain.MaterialSupplier, error) {
 	rows, err := tx.Query(`
 		SELECT stm.id, stm.priority, stm.supplier_id, stm.material_id,
-		       stm.price, stm.lead_time::text, stm.created, stm.modified, s.name
+		       stm.price, (EXTRACT(EPOCH FROM stm.lead_time) / 86400)::int, stm.created, stm.modified, s.name
 		FROM materials.suppliers_to_materials stm
 		JOIN materials.suppliers s ON s.id = stm.supplier_id
 		WHERE stm.material_id = $1
@@ -117,54 +117,6 @@ func ListMaterialSuppliers(tx *sql.Tx, materialID int) ([]domain.MaterialSupplie
 		result = append(result, ms)
 	}
 	return result, rows.Err()
-}
-
-func ListMaterialNotes(tx *sql.Tx, materialID int) ([]domain.Note, error) {
-	rows, err := tx.Query(`
-		SELECT n.id, n.content, n.created, n.modified
-		FROM common.notes n
-		JOIN materials.materials_notes mn ON mn.note_id = n.id
-		WHERE mn.material_id = $1
-		ORDER BY n.created DESC`, materialID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var notes []domain.Note
-	for rows.Next() {
-		var n domain.Note
-		if err := rows.Scan(&n.ID, &n.Content, &n.Created, &n.Modified); err != nil {
-			return nil, err
-		}
-		notes = append(notes, n)
-	}
-	return notes, rows.Err()
-}
-
-func CreateMaterialNote(tx *sql.Tx, materialID int, content string) (domain.Note, error) {
-	var n domain.Note
-	err := tx.QueryRow(`
-		INSERT INTO common.notes (content) VALUES ($1)
-		RETURNING id, content, created, modified`, content).
-		Scan(&n.ID, &n.Content, &n.Created, &n.Modified)
-	if err != nil {
-		return n, err
-	}
-	_, err = tx.Exec(`
-		INSERT INTO materials.materials_notes (material_id, note_id) VALUES ($1, $2)`,
-		materialID, n.ID)
-	return n, err
-}
-
-func UpdateNote(tx *sql.Tx, id int, content string) (domain.Note, error) {
-	var n domain.Note
-	err := tx.QueryRow(`
-		UPDATE common.notes SET content=$2, modified=CURRENT_TIMESTAMP
-		WHERE id=$1
-		RETURNING id, content, created, modified`, id, content).
-		Scan(&n.ID, &n.Content, &n.Created, &n.Modified)
-	return n, err
 }
 
 func CreateMaterial(tx *sql.Tx, name string) (domain.MaterialWithUses, error) {
@@ -198,13 +150,3 @@ func CreateMaterial(tx *sql.Tx, name string) (domain.MaterialWithUses, error) {
 	return mwu, err
 }
 
-func DeleteMaterialNote(tx *sql.Tx, materialID, noteID int) error {
-	_, err := tx.Exec(`
-		DELETE FROM materials.materials_notes WHERE material_id=$1 AND note_id=$2`,
-		materialID, noteID)
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(`DELETE FROM common.notes WHERE id=$1`, noteID)
-	return err
-}

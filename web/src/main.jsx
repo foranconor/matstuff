@@ -12,6 +12,8 @@ import Contacts from './pages/Contacts.jsx'
 import ContactDetail from './pages/ContactDetail.jsx'
 import Brackets from './pages/Brackets.jsx'
 import BracketDetail from './pages/BracketDetail.jsx'
+import Profiles from './pages/Profiles.jsx'
+import ProfileDetail from './pages/ProfileDetail.jsx'
 
 function ProtectedRoute({ children }) {
   const token = getToken()
@@ -34,6 +36,7 @@ function Layout({ children }) {
         <NavLink to="/suppliers">Suppliers</NavLink>
         <NavLink to="/contacts">Contacts</NavLink>
         <NavLink to="/brackets">Brackets</NavLink>
+        <NavLink to="/profiles">Profiles</NavLink>
         <button className="btn-logout" onClick={handleLogout}>Sign out</button>
       </nav>
       <main>{children}</main>
@@ -59,6 +62,8 @@ createRoot(document.getElementById('root')).render(
                 <Route path="contacts/:id" element={<ContactDetail />} />
                 <Route path="brackets" element={<Brackets />} />
                 <Route path="brackets/:id" element={<BracketDetail />} />
+                <Route path="profiles" element={<Profiles />} />
+                <Route path="profiles/:id" element={<ProfileDetail />} />
               </Routes>
             </Layout>
           </ProtectedRoute>

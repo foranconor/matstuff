@@ -578,6 +578,56 @@ code {
   margin-top: 0.5rem;
 }
 
+.link-add {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.link-add select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 0.95rem;
+  flex: 1;
+  max-width: 300px;
+}
+
+.link-add .btn-primary {
+  margin-left: 0;
+}
+
+td input {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 0.95rem;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: text;
+}
+
+td input:hover,
+td input:focus {
+  border-color: var(--border);
+  background: var(--bg);
+  outline: none;
+}
+
+.cell-link {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.cell-link:hover {
+  text-decoration: underline;
+}
+
 .login-error {
   margin: 0;
   padding: 0.5rem 0.75rem;

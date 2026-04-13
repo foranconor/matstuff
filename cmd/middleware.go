@@ -86,7 +86,7 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 						break
 					}
 				}
-				log.Fatal("a handler panicked!!!!!")
+				log.Println(err)
 				http.Error(w, "Internal Server Error", 500)
 			}
 		}()

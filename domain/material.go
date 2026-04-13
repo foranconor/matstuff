@@ -51,7 +51,7 @@ type MaterialSupplier struct {
 	SupplierID   int
 	MaterialID   int
 	Price        float64
-	LeadTime     string
+	LeadTime     int
 	SupplierName string
 	MaterialName string
 	Created      time.Time

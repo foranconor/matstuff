@@ -61,11 +61,11 @@ func CreateSupplier(tx *sql.Tx, name, website string, contactID int) (domain.Sup
 func ListSupplierMaterials(tx *sql.Tx, supplierID int) ([]domain.MaterialSupplier, error) {
 	rows, err := tx.Query(`
 		SELECT stm.id, stm.priority, stm.supplier_id, stm.material_id,
-		       stm.price, stm.lead_time::text, stm.created, stm.modified, m.name
+		       stm.price, (EXTRACT(EPOCH FROM stm.lead_time) / 86400)::int, stm.created, stm.modified, COALESCE(NULLIF(m.nickname, ''), m.name)
 		FROM materials.suppliers_to_materials stm
 		JOIN materials.materials m ON m.id = stm.material_id
 		WHERE stm.supplier_id = $1
-		ORDER BY stm.priority, m.name`, supplierID)
+		ORDER BY stm.priority, COALESCE(NULLIF(m.nickname, ''), m.name)`, supplierID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +83,42 @@ func ListSupplierMaterials(tx *sql.Tx, supplierID int) ([]domain.MaterialSupplie
 		result = append(result, ms)
 	}
 	return result, rows.Err()
+}
+
+func CreateMaterialSupplier(tx *sql.Tx, materialID, supplierID int) (domain.MaterialSupplier, error) {
+	var ms domain.MaterialSupplier
+	err := tx.QueryRow(`
+		WITH ins AS (
+			INSERT INTO materials.suppliers_to_materials (material_id, supplier_id, priority, price)
+			VALUES ($1, $2, 1, 0)
+			RETURNING *
+		)
+		SELECT ins.id, ins.priority, ins.supplier_id, ins.material_id, ins.price,
+		       (EXTRACT(EPOCH FROM ins.lead_time) / 86400)::int,
+		       ins.created, ins.modified, s.name, m.name
+		FROM ins
+		JOIN materials.suppliers s ON s.id = ins.supplier_id
+		JOIN materials.materials m ON m.id = ins.material_id`,
+		materialID, supplierID).Scan(
+		&ms.ID, &ms.Priority, &ms.SupplierID, &ms.MaterialID, &ms.Price,
+		&ms.LeadTime, &ms.Created, &ms.Modified, &ms.SupplierName, &ms.MaterialName,
+	)
+	return ms, err
+}
+
+func UpdateMaterialSupplier(tx *sql.Tx, ms domain.MaterialSupplier) error {
+	_, err := tx.Exec(`
+		UPDATE materials.suppliers_to_materials
+		SET priority=$2, price=$3, lead_time=$4 * INTERVAL '1 day', modified=CURRENT_TIMESTAMP
+		WHERE id=$1`,
+		ms.ID, ms.Priority, ms.Price, ms.LeadTime,
+	)
+	return err
+}
+
+func DeleteMaterialSupplier(tx *sql.Tx, id int) error {
+	_, err := tx.Exec(`DELETE FROM materials.suppliers_to_materials WHERE id=$1`, id)
+	return err
 }
 
 func UpdateSupplier(tx *sql.Tx, s domain.Supplier) error {

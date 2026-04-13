@@ -48,6 +48,9 @@ func main() {
 	mux.HandleFunc("PUT /api/materials/{id}", h.UpdateMaterial)
 	mux.HandleFunc("PUT /api/materials/{id}/uses", h.UpdateUses)
 	mux.HandleFunc("GET /api/materials/{id}/suppliers", h.ListMaterialSuppliers)
+	mux.HandleFunc("POST /api/materials/{id}/suppliers", h.AddSupplierToMaterial)
+	mux.HandleFunc("GET /api/materials/{id}/profiles", h.ListMaterialProfiles)
+	mux.HandleFunc("POST /api/materials/{id}/profiles", h.AddProfileToMaterial)
 	mux.HandleFunc("GET /api/materials/{id}/notes", h.ListMaterialNotes)
 	mux.HandleFunc("POST /api/materials/{id}/notes", h.CreateMaterialNote)
 	mux.HandleFunc("PUT /api/materials/{id}/notes/{nid}", h.UpdateMaterialNote)
@@ -58,7 +61,21 @@ func main() {
 	mux.HandleFunc("GET /api/suppliers", h.ListSuppliers)
 	mux.HandleFunc("GET /api/suppliers/{id}", h.GetSupplier)
 	mux.HandleFunc("GET /api/suppliers/{id}/materials", h.ListSupplierMaterials)
+	mux.HandleFunc("POST /api/suppliers/{id}/materials", h.AddMaterialToSupplier)
 	mux.HandleFunc("PUT /api/suppliers/{id}", h.UpdateSupplier)
+	mux.HandleFunc("PUT /api/supplier-materials/{id}", h.UpdateMaterialSupplier)
+	mux.HandleFunc("DELETE /api/supplier-materials/{id}", h.DeleteMaterialSupplier)
+
+	// Profiles
+	mux.HandleFunc("GET /api/profiles", h.ListProfiles)
+	mux.HandleFunc("POST /api/profiles", h.CreateProfile)
+	mux.HandleFunc("GET /api/profiles/{id}", h.GetProfile)
+	mux.HandleFunc("PUT /api/profiles/{id}", h.UpdateProfile)
+	mux.HandleFunc("DELETE /api/profiles/{id}", h.DeleteProfile)
+	mux.HandleFunc("GET /api/profiles/{id}/materials", h.ListProfileMaterials)
+	mux.HandleFunc("POST /api/profiles/{id}/materials", h.AddMaterialToProfile)
+	mux.HandleFunc("PUT /api/material-profiles/{id}", h.UpdateMaterialProfile)
+	mux.HandleFunc("DELETE /api/material-profiles/{id}", h.DeleteMaterialProfile)
 
 	// Contacts
 	mux.HandleFunc("POST /api/contacts", h.CreateContact)

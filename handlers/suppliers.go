@@ -92,6 +92,116 @@ func (h *Handler) ListSupplierMaterials(w http.ResponseWriter, r *http.Request) 
 	sendJSON(materials, w)
 }
 
+func (h *Handler) AddSupplierToMaterial(w http.ResponseWriter, r *http.Request) {
+	materialID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	body, ok := recieveJSON[struct{ SupplierID int }](w, r)
+	if !ok {
+		return
+	}
+
+	tx, ok := beginTx(h.DB, w)
+	if !ok {
+		return
+	}
+	defer tx.Rollback()
+
+	ms, err := db.CreateMaterialSupplier(tx, materialID, body.SupplierID)
+	if err != nil {
+		http.Error(w, dbError, http.StatusInternalServerError)
+		return
+	}
+	if !commitTx(tx, w) {
+		return
+	}
+	sendJSON(ms, w)
+}
+
+func (h *Handler) AddMaterialToSupplier(w http.ResponseWriter, r *http.Request) {
+	supplierID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	body, ok := recieveJSON[struct{ MaterialID int }](w, r)
+	if !ok {
+		return
+	}
+
+	tx, ok := beginTx(h.DB, w)
+	if !ok {
+		return
+	}
+	defer tx.Rollback()
+
+	ms, err := db.CreateMaterialSupplier(tx, body.MaterialID, supplierID)
+	if err != nil {
+		http.Error(w, dbError, http.StatusInternalServerError)
+		return
+	}
+	if !commitTx(tx, w) {
+		return
+	}
+	sendJSON(ms, w)
+}
+
+func (h *Handler) UpdateMaterialSupplier(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	ms, ok := recieveJSON[domain.MaterialSupplier](w, r)
+	if !ok {
+		return
+	}
+	ms.ID = id
+
+	tx, ok := beginTx(h.DB, w)
+	if !ok {
+		return
+	}
+	defer tx.Rollback()
+
+	if err := db.UpdateMaterialSupplier(tx, ms); err != nil {
+		http.Error(w, dbError, http.StatusInternalServerError)
+		return
+	}
+	if !commitTx(tx, w) {
+		return
+	}
+	sendJSON(ms, w)
+}
+
+func (h *Handler) DeleteMaterialSupplier(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	tx, ok := beginTx(h.DB, w)
+	if !ok {
+		return
+	}
+	defer tx.Rollback()
+
+	if err := db.DeleteMaterialSupplier(tx, id); err != nil {
+		http.Error(w, dbError, http.StatusInternalServerError)
+		return
+	}
+	if !commitTx(tx, w) {
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) UpdateSupplier(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {

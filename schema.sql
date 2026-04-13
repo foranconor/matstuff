@@ -556,6 +556,40 @@ ALTER TABLE ONLY materials.uses
 
 
 --
+-- Name: profiles; Type: TABLE; Schema: handrails; Owner: conor
+--
+
+CREATE TABLE handrails.profiles (
+    id serial NOT NULL,
+    name text NOT NULL,
+    created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    modified timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE handrails.profiles OWNER TO conor;
+ALTER TABLE ONLY handrails.profiles ADD CONSTRAINT profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: material_profiles; Type: TABLE; Schema: handrails; Owner: conor
+--
+
+CREATE TABLE handrails.material_profiles (
+    id serial NOT NULL,
+    material_id integer NOT NULL,
+    profile_id integer NOT NULL,
+    price double precision DEFAULT 0 NOT NULL,
+    created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    modified timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE handrails.material_profiles OWNER TO conor;
+ALTER TABLE ONLY handrails.material_profiles ADD CONSTRAINT material_profiles_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY handrails.material_profiles ADD CONSTRAINT material_profiles_material_id_fkey FOREIGN KEY (material_id) REFERENCES materials.materials(id);
+ALTER TABLE ONLY handrails.material_profiles ADD CONSTRAINT material_profiles_profile_id_fkey FOREIGN KEY (profile_id) REFERENCES handrails.profiles(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
