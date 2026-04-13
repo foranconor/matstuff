@@ -1,0 +1,16 @@
+[Unit]
+Description=WebServer For the backend of the materials.service
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStart=/home/conor/matstuff/main
+WorkingDirectory=/home/conor/matstuff
+User=conor
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardErrror=syslog
+SyslogIdentifier=%n
+
