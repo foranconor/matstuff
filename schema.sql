@@ -157,6 +157,7 @@ CREATE TABLE materials.materials (
     density double precision DEFAULT 500 NOT NULL,
     max_overhang double precision DEFAULT 10 NOT NULL,
     radius double precision DEFAULT 3 NOT NULL,
+    color text DEFAULT ''::text NOT NULL,
     created timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     modified timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

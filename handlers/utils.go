@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func recieveJSON[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
+func receiveJSON[T any](w http.ResponseWriter, r *http.Request) (T, bool) {
 	var out T
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -46,6 +46,19 @@ func sendJSON[T any](data T, w http.ResponseWriter) bool {
 }
 
 const dbError = "Database error"
+
+func sendError(w http.ResponseWriter, msg string, status int, errs ...error) {
+	if len(errs) > 0 && errs[0] != nil {
+		log.Println(msg, "error", errs[0])
+	} else {
+		log.Println(msg)
+	}
+	http.Error(w, msg, status)
+}
+
+func dbErr(w http.ResponseWriter, err error) {
+	sendError(w, dbError, http.StatusInternalServerError, err)
+}
 
 func beginTx(db *sql.DB, w http.ResponseWriter) (*sql.Tx, bool) {
 	tx, err := db.Begin()

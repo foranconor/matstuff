@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
-	body, ok := recieveJSON[struct {
+	body, ok := receiveJSON[struct {
 		Name  string
 		Phone string
 		Email string
@@ -26,7 +26,7 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 
 	c, err := db.CreateContact(tx, body.Name, body.Phone, body.Email)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -44,7 +44,7 @@ func (h *Handler) ListContacts(w http.ResponseWriter, r *http.Request) {
 
 	contacts, err := db.ListContacts(tx)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(contacts, w)
@@ -53,7 +53,7 @@ func (h *Handler) ListContacts(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetContact(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *Handler) GetContact(w http.ResponseWriter, r *http.Request) {
 
 	contact, err := db.GetContact(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(contact, w)
@@ -74,11 +74,11 @@ func (h *Handler) GetContact(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	c, ok := recieveJSON[domain.Contact](w, r)
+	c, ok := receiveJSON[domain.Contact](w, r)
 	if !ok {
 		return
 	}
@@ -91,7 +91,7 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.UpdateContact(tx, c); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {

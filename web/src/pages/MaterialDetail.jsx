@@ -172,6 +172,13 @@ export default function MaterialDetail() {
             <label>Units</label>
             <InlineSelect value={material.Units} options={UNITS} onSave={v => saveField('Units', v)} />
           </div>
+          <div className="field-row">
+            <label>Color</label>
+            <div className="color-field">
+              <span className="color-swatch" style={{ background: material.Color }} />
+              <InlineField value={material.Color} onSave={v => saveField('Color', v)} />
+            </div>
+          </div>
           <div className="field-row field-row--full">
             <label>Blurb</label>
             <InlineField value={material.Blurb} onSave={v => saveField('Blurb', v)} />

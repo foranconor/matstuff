@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) CreateBracket(w http.ResponseWriter, r *http.Request) {
-	body, ok := recieveJSON[struct{ Name string }](w, r)
+	body, ok := receiveJSON[struct{ Name string }](w, r)
 	if !ok {
 		return
 	}
@@ -22,7 +22,7 @@ func (h *Handler) CreateBracket(w http.ResponseWriter, r *http.Request) {
 
 	b, err := db.CreateBracket(tx, body.Name)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -41,7 +41,7 @@ func (h *Handler) ListBrackets(w http.ResponseWriter, r *http.Request) {
 	showAll := r.URL.Query().Get("all") == "true"
 	brackets, err := db.ListBrackets(tx, showAll)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(brackets, w)
@@ -50,7 +50,7 @@ func (h *Handler) ListBrackets(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetBracket(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) GetBracket(w http.ResponseWriter, r *http.Request) {
 
 	bracket, err := db.GetBracket(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(bracket, w)
@@ -71,11 +71,11 @@ func (h *Handler) GetBracket(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateBracket(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	b, ok := recieveJSON[domain.Bracket](w, r)
+	b, ok := receiveJSON[domain.Bracket](w, r)
 	if !ok {
 		return
 	}
@@ -88,7 +88,7 @@ func (h *Handler) UpdateBracket(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.UpdateBracket(tx, b); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {

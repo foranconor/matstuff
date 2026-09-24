@@ -9,7 +9,7 @@ func ListMaterials(tx *sql.Tx, showAll bool) ([]domain.Material, error) {
 	query := `
 		SELECT m.id, m.name, m.nickname, m.treatment, m.blurb, m.units,
 		       m.length, m.width, m.thickness, m.max_span, m.density,
-		       m.max_overhang, m.radius, u.published, u.archived, m.created, m.modified
+		       m.max_overhang, m.radius, m.color, u.published, u.archived, m.created, m.modified
 		FROM materials.materials m
 		JOIN materials.uses u ON u.material_id = m.id
 		WHERE true`
@@ -30,7 +30,7 @@ func ListMaterials(tx *sql.Tx, showAll bool) ([]domain.Material, error) {
 		err := rows.Scan(
 			&m.ID, &m.Name, &m.Nickname, &m.Treatment, &m.Blurb, &m.Units,
 			&m.Length, &m.Width, &m.Thickness, &m.MaxSpan, &m.Density,
-			&m.MaxOverhang, &m.Radius, &m.Published, &m.Archived, &m.Created, &m.Modified,
+			&m.MaxOverhang, &m.Radius, &m.Color, &m.Published, &m.Archived, &m.Created, &m.Modified,
 		)
 		if err != nil {
 			return nil, err
@@ -45,7 +45,7 @@ func GetMaterial(tx *sql.Tx, id int) (domain.MaterialWithUses, error) {
 	err := tx.QueryRow(`
 		SELECT m.id, m.name, m.nickname, m.treatment, m.blurb, m.units,
 		       m.length, m.width, m.thickness, m.max_span, m.density,
-		       m.max_overhang, m.radius, m.created, m.modified,
+		       m.max_overhang, m.radius, m.color, m.created, m.modified,
 		       u.id, u.material_id, u.exterior, u.interior, u.early_access,
 		       u.stringers, u.risers, u.treads, u.timber, u.panel,
 		       u.published, u.archived, u.handrail, u.created, u.modified
@@ -56,7 +56,7 @@ func GetMaterial(tx *sql.Tx, id int) (domain.MaterialWithUses, error) {
 		&mwu.Material.Treatment, &mwu.Material.Blurb, &mwu.Material.Units,
 		&mwu.Material.Length, &mwu.Material.Width, &mwu.Material.Thickness,
 		&mwu.Material.MaxSpan, &mwu.Material.Density, &mwu.Material.MaxOverhang,
-		&mwu.Material.Radius, &mwu.Material.Created, &mwu.Material.Modified,
+		&mwu.Material.Radius, &mwu.Material.Color, &mwu.Material.Created, &mwu.Material.Modified,
 		&mwu.Uses.ID, &mwu.Uses.MaterialID, &mwu.Uses.Exterior, &mwu.Uses.Interior,
 		&mwu.Uses.EarlyAccess, &mwu.Uses.Stringers, &mwu.Uses.Risers, &mwu.Uses.Treads,
 		&mwu.Uses.Timber, &mwu.Uses.Panel, &mwu.Uses.Published, &mwu.Uses.Archived,
@@ -70,11 +70,11 @@ func UpdateMaterial(tx *sql.Tx, m domain.Material) error {
 		UPDATE materials.materials
 		SET name=$2, nickname=$3, treatment=$4, blurb=$5, units=$6,
 		    length=$7, width=$8, thickness=$9, max_span=$10, density=$11,
-		    max_overhang=$12, radius=$13, modified=CURRENT_TIMESTAMP
+		    max_overhang=$12, radius=$13, color=$14, modified=CURRENT_TIMESTAMP
 		WHERE id=$1`,
 		m.ID, m.Name, m.Nickname, m.Treatment, m.Blurb, m.Units,
 		m.Length, m.Width, m.Thickness, m.MaxSpan, m.Density,
-		m.MaxOverhang, m.Radius,
+		m.MaxOverhang, m.Radius, m.Color,
 	)
 	return err
 }
@@ -126,12 +126,12 @@ func CreateMaterial(tx *sql.Tx, name string) (domain.MaterialWithUses, error) {
 		VALUES ($1)
 		RETURNING id, name, nickname, treatment, blurb, units,
 		          length, width, thickness, max_span, density, max_overhang, radius,
-		          created, modified`, name).Scan(
+		          color, created, modified`, name).Scan(
 		&mwu.Material.ID, &mwu.Material.Name, &mwu.Material.Nickname,
 		&mwu.Material.Treatment, &mwu.Material.Blurb, &mwu.Material.Units,
 		&mwu.Material.Length, &mwu.Material.Width, &mwu.Material.Thickness,
 		&mwu.Material.MaxSpan, &mwu.Material.Density, &mwu.Material.MaxOverhang,
-		&mwu.Material.Radius, &mwu.Material.Created, &mwu.Material.Modified,
+		&mwu.Material.Radius, &mwu.Material.Color, &mwu.Material.Created, &mwu.Material.Modified,
 	)
 	if err != nil {
 		return mwu, err

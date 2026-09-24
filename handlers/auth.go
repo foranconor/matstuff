@@ -55,7 +55,7 @@ type NonceResp struct {
 }
 
 func (a *Auth) NonceRoute(w http.ResponseWriter, r *http.Request) {
-	req, ok := recieveJSON[NonceReq](w, r)
+	req, ok := receiveJSON[NonceReq](w, r)
 	if !ok {
 		fmt.Println("failed to recieve email")
 		w.WriteHeader(http.StatusBadRequest)
@@ -85,7 +85,7 @@ type TokenResp struct {
 }
 
 func (a *Auth) TokensRoute(w http.ResponseWriter, r *http.Request) {
-	req, ok := recieveJSON[TokenReq](w, r)
+	req, ok := receiveJSON[TokenReq](w, r)
 	if !ok {
 		return
 	}

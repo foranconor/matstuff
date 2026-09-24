@@ -12,7 +12,7 @@ import (
 func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request, dbFn func(*sql.Tx, int) ([]domain.Note, error)) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -24,7 +24,7 @@ func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request, dbFn func(*s
 
 	notes, err := dbFn(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(notes, w)
@@ -33,11 +33,11 @@ func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request, dbFn func(*s
 func (h *Handler) createNote(w http.ResponseWriter, r *http.Request, dbFn func(*sql.Tx, int, string) (domain.Note, error)) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	body, ok := recieveJSON[struct{ Content string }](w, r)
+	body, ok := receiveJSON[struct{ Content string }](w, r)
 	if !ok {
 		return
 	}
@@ -50,7 +50,7 @@ func (h *Handler) createNote(w http.ResponseWriter, r *http.Request, dbFn func(*
 
 	note, err := dbFn(tx, id, body.Content)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -62,11 +62,11 @@ func (h *Handler) createNote(w http.ResponseWriter, r *http.Request, dbFn func(*
 func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 	noteID, err := strconv.Atoi(r.PathValue("nid"))
 	if err != nil {
-		http.Error(w, "invalid note id", http.StatusBadRequest)
+		sendError(w, "invalid note id", http.StatusBadRequest, err)
 		return
 	}
 
-	body, ok := recieveJSON[struct{ Content string }](w, r)
+	body, ok := receiveJSON[struct{ Content string }](w, r)
 	if !ok {
 		return
 	}
@@ -79,7 +79,7 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 
 	note, err := db.UpdateNote(tx, noteID, body.Content)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -91,12 +91,12 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request, dbFn func(*sql.Tx, int, int) error) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 	noteID, err := strconv.Atoi(r.PathValue("nid"))
 	if err != nil {
-		http.Error(w, "invalid note id", http.StatusBadRequest)
+		sendError(w, "invalid note id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -107,7 +107,7 @@ func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request, dbFn func(*
 	defer tx.Rollback()
 
 	if err := dbFn(tx, id, noteID); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {

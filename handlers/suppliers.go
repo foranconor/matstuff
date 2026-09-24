@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) CreateSupplier(w http.ResponseWriter, r *http.Request) {
-	body, ok := recieveJSON[struct {
+	body, ok := receiveJSON[struct {
 		Name      string
 		Website   string
 		ContactID int
@@ -26,7 +26,7 @@ func (h *Handler) CreateSupplier(w http.ResponseWriter, r *http.Request) {
 
 	s, err := db.CreateSupplier(tx, body.Name, body.Website, body.ContactID)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -44,7 +44,7 @@ func (h *Handler) ListSuppliers(w http.ResponseWriter, r *http.Request) {
 
 	suppliers, err := db.ListSuppliers(tx)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(suppliers, w)
@@ -53,7 +53,7 @@ func (h *Handler) ListSuppliers(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetSupplier(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *Handler) GetSupplier(w http.ResponseWriter, r *http.Request) {
 
 	supplier, err := db.GetSupplier(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(supplier, w)
@@ -74,7 +74,7 @@ func (h *Handler) GetSupplier(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListSupplierMaterials(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *Handler) ListSupplierMaterials(w http.ResponseWriter, r *http.Request) 
 
 	materials, err := db.ListSupplierMaterials(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(materials, w)
@@ -95,11 +95,11 @@ func (h *Handler) ListSupplierMaterials(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) AddSupplierToMaterial(w http.ResponseWriter, r *http.Request) {
 	materialID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	body, ok := recieveJSON[struct{ SupplierID int }](w, r)
+	body, ok := receiveJSON[struct{ SupplierID int }](w, r)
 	if !ok {
 		return
 	}
@@ -112,7 +112,7 @@ func (h *Handler) AddSupplierToMaterial(w http.ResponseWriter, r *http.Request) 
 
 	ms, err := db.CreateMaterialSupplier(tx, materialID, body.SupplierID)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -124,11 +124,11 @@ func (h *Handler) AddSupplierToMaterial(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) AddMaterialToSupplier(w http.ResponseWriter, r *http.Request) {
 	supplierID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	body, ok := recieveJSON[struct{ MaterialID int }](w, r)
+	body, ok := receiveJSON[struct{ MaterialID int }](w, r)
 	if !ok {
 		return
 	}
@@ -141,7 +141,7 @@ func (h *Handler) AddMaterialToSupplier(w http.ResponseWriter, r *http.Request) 
 
 	ms, err := db.CreateMaterialSupplier(tx, body.MaterialID, supplierID)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -153,11 +153,11 @@ func (h *Handler) AddMaterialToSupplier(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) UpdateMaterialSupplier(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	ms, ok := recieveJSON[domain.MaterialSupplier](w, r)
+	ms, ok := receiveJSON[domain.MaterialSupplier](w, r)
 	if !ok {
 		return
 	}
@@ -170,7 +170,7 @@ func (h *Handler) UpdateMaterialSupplier(w http.ResponseWriter, r *http.Request)
 	defer tx.Rollback()
 
 	if err := db.UpdateMaterialSupplier(tx, ms); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -182,7 +182,7 @@ func (h *Handler) UpdateMaterialSupplier(w http.ResponseWriter, r *http.Request)
 func (h *Handler) DeleteMaterialSupplier(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (h *Handler) DeleteMaterialSupplier(w http.ResponseWriter, r *http.Request)
 	defer tx.Rollback()
 
 	if err := db.DeleteMaterialSupplier(tx, id); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -205,11 +205,11 @@ func (h *Handler) DeleteMaterialSupplier(w http.ResponseWriter, r *http.Request)
 func (h *Handler) UpdateSupplier(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	s, ok := recieveJSON[domain.Supplier](w, r)
+	s, ok := receiveJSON[domain.Supplier](w, r)
 	if !ok {
 		return
 	}
@@ -222,7 +222,7 @@ func (h *Handler) UpdateSupplier(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.UpdateSupplier(tx, s); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {

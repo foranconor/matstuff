@@ -14,7 +14,7 @@ type Handler struct {
 }
 
 func (h *Handler) CreateMaterial(w http.ResponseWriter, r *http.Request) {
-	body, ok := recieveJSON[struct{ Name string }](w, r)
+	body, ok := receiveJSON[struct{ Name string }](w, r)
 	if !ok {
 		return
 	}
@@ -27,7 +27,7 @@ func (h *Handler) CreateMaterial(w http.ResponseWriter, r *http.Request) {
 
 	mwu, err := db.CreateMaterial(tx, body.Name)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -47,7 +47,7 @@ func (h *Handler) ListMaterials(w http.ResponseWriter, r *http.Request) {
 
 	materials, err := db.ListMaterials(tx, showAll)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(materials, w)
@@ -56,7 +56,7 @@ func (h *Handler) ListMaterials(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetMaterial(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *Handler) GetMaterial(w http.ResponseWriter, r *http.Request) {
 
 	material, err := db.GetMaterial(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(material, w)
@@ -77,11 +77,11 @@ func (h *Handler) GetMaterial(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateMaterial(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	m, ok := recieveJSON[domain.Material](w, r)
+	m, ok := receiveJSON[domain.Material](w, r)
 	if !ok {
 		return
 	}
@@ -90,11 +90,11 @@ func (h *Handler) UpdateMaterial(w http.ResponseWriter, r *http.Request) {
 	validTreatments := map[string]bool{"UT": true, "FDA": true, "MCA": true, "H1.2": true, "H3.2": true, "H4": true, "H5": true}
 	validUnits := map[string]bool{"mm": true, "sheet": true}
 	if !validTreatments[m.Treatment] {
-		http.Error(w, "invalid treatment", http.StatusBadRequest)
+		sendError(w, "invalid treatment", http.StatusBadRequest)
 		return
 	}
 	if !validUnits[m.Units] {
-		http.Error(w, "invalid units", http.StatusBadRequest)
+		sendError(w, "invalid units", http.StatusBadRequest)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *Handler) UpdateMaterial(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.UpdateMaterial(tx, m); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -117,11 +117,11 @@ func (h *Handler) UpdateMaterial(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateUses(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	u, ok := recieveJSON[domain.Uses](w, r)
+	u, ok := receiveJSON[domain.Uses](w, r)
 	if !ok {
 		return
 	}
@@ -134,7 +134,7 @@ func (h *Handler) UpdateUses(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.UpdateUses(tx, u); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -146,7 +146,7 @@ func (h *Handler) UpdateUses(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListMaterialSuppliers(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -158,7 +158,7 @@ func (h *Handler) ListMaterialSuppliers(w http.ResponseWriter, r *http.Request) 
 
 	suppliers, err := db.ListMaterialSuppliers(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(suppliers, w)

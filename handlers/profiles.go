@@ -17,14 +17,14 @@ func (h *Handler) ListProfiles(w http.ResponseWriter, r *http.Request) {
 
 	profiles, err := db.ListProfiles(tx)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(profiles, w)
 }
 
 func (h *Handler) CreateProfile(w http.ResponseWriter, r *http.Request) {
-	body, ok := recieveJSON[struct{ Name string }](w, r)
+	body, ok := receiveJSON[struct{ Name string }](w, r)
 	if !ok {
 		return
 	}
@@ -37,7 +37,7 @@ func (h *Handler) CreateProfile(w http.ResponseWriter, r *http.Request) {
 
 	p, err := db.CreateProfile(tx, body.Name)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -49,7 +49,7 @@ func (h *Handler) CreateProfile(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 
 	p, err := db.GetProfile(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(p, w)
@@ -70,11 +70,11 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	p, ok := recieveJSON[domain.Profile](w, r)
+	p, ok := receiveJSON[domain.Profile](w, r)
 	if !ok {
 		return
 	}
@@ -87,7 +87,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.UpdateProfile(tx, p); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -99,7 +99,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (h *Handler) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 	defer tx.Rollback()
 
 	if err := db.DeleteProfile(tx, id); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -122,7 +122,7 @@ func (h *Handler) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListProfileMaterials(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -134,7 +134,7 @@ func (h *Handler) ListProfileMaterials(w http.ResponseWriter, r *http.Request) {
 
 	materials, err := db.ListProfileMaterials(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(materials, w)
@@ -143,11 +143,11 @@ func (h *Handler) ListProfileMaterials(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AddMaterialToProfile(w http.ResponseWriter, r *http.Request) {
 	profileID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	body, ok := recieveJSON[struct{ MaterialID int }](w, r)
+	body, ok := receiveJSON[struct{ MaterialID int }](w, r)
 	if !ok {
 		return
 	}
@@ -160,7 +160,7 @@ func (h *Handler) AddMaterialToProfile(w http.ResponseWriter, r *http.Request) {
 
 	mp, err := db.CreateMaterialProfile(tx, body.MaterialID, profileID)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -172,7 +172,7 @@ func (h *Handler) AddMaterialToProfile(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListMaterialProfiles(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -184,7 +184,7 @@ func (h *Handler) ListMaterialProfiles(w http.ResponseWriter, r *http.Request) {
 
 	profiles, err := db.ListMaterialProfiles(tx, id)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	sendJSON(profiles, w)
@@ -193,11 +193,11 @@ func (h *Handler) ListMaterialProfiles(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AddProfileToMaterial(w http.ResponseWriter, r *http.Request) {
 	materialID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	body, ok := recieveJSON[struct{ ProfileID int }](w, r)
+	body, ok := receiveJSON[struct{ ProfileID int }](w, r)
 	if !ok {
 		return
 	}
@@ -210,7 +210,7 @@ func (h *Handler) AddProfileToMaterial(w http.ResponseWriter, r *http.Request) {
 
 	mp, err := db.CreateMaterialProfile(tx, materialID, body.ProfileID)
 	if err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -222,11 +222,11 @@ func (h *Handler) AddProfileToMaterial(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UpdateMaterialProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
-	mp, ok := recieveJSON[domain.MaterialProfile](w, r)
+	mp, ok := receiveJSON[domain.MaterialProfile](w, r)
 	if !ok {
 		return
 	}
@@ -239,7 +239,7 @@ func (h *Handler) UpdateMaterialProfile(w http.ResponseWriter, r *http.Request) 
 	defer tx.Rollback()
 
 	if err := db.UpdateMaterialProfile(tx, mp); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {
@@ -251,7 +251,7 @@ func (h *Handler) UpdateMaterialProfile(w http.ResponseWriter, r *http.Request) 
 func (h *Handler) DeleteMaterialProfile(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		sendError(w, "invalid id", http.StatusBadRequest, err)
 		return
 	}
 
@@ -262,7 +262,7 @@ func (h *Handler) DeleteMaterialProfile(w http.ResponseWriter, r *http.Request) 
 	defer tx.Rollback()
 
 	if err := db.DeleteMaterialProfile(tx, id); err != nil {
-		http.Error(w, dbError, http.StatusInternalServerError)
+		dbErr(w, err)
 		return
 	}
 	if !commitTx(tx, w) {

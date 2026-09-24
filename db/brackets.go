@@ -83,4 +83,3 @@ func CreateBracket(tx *sql.Tx, name string) (domain.Bracket, error) {
 		&b.Published, &b.Archived, &b.Created)
 	return b, err
 }
-

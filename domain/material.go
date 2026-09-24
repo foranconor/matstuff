@@ -16,6 +16,7 @@ type Material struct {
 	Density     float64
 	MaxOverhang float64
 	Radius      float64
+	Color       string
 	Published   bool
 	Archived    bool
 	Created     time.Time

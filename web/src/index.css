@@ -300,6 +300,22 @@ tr.row-archived td {
   outline: none;
 }
 
+/* any CSS color string: a name like cornflowerblue or a hex like #ff00ff -
+   the swatch shows nothing when it's empty or not a valid color */
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-swatch {
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
 .detail-grid select {
   padding: 0.35rem 0.6rem;
   border: 1px solid transparent;
