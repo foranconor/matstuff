@@ -15,7 +15,7 @@ func ListMaterials(tx *sql.Tx, showAll bool) ([]domain.Material, error) {
 		WHERE true`
 
 	if !showAll {
-		query += ` AND u.archived = false AND u.published = true`
+		query += ` AND u.archived = false`
 	}
 
 	rows, err := tx.Query(query)

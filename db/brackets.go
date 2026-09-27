@@ -14,7 +14,7 @@ func ListBrackets(tx *sql.Tx, showAll bool) ([]domain.Bracket, error) {
 		WHERE true`
 
 	if !showAll {
-		query += ` AND b.archived = false AND b.published = true`
+		query += ` AND b.archived = false`
 	}
 
 	query += ` ORDER BY b.name`
